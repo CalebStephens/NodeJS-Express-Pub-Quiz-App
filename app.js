@@ -1,11 +1,13 @@
 import dotenv from "dotenv";
 import express, { urlencoded, json } from "express";
+import cors from "cors";
+import helmet from "helmet";
 
 /**
  * You will create the routes for institutions and departments later
  */
-import institutions from "./routes/v1/institutions.js";
-import departments from "./routes/v1/departments.js";
+import auth from "./routes/v1/auth.js";
+import authRoute from "./middleware/authRoute.js";
 
 dotenv.config();
 
@@ -22,9 +24,10 @@ const PORT = process.env.PORT;
 
 app.use(urlencoded({ extended: false }));
 app.use(json());
+app.use(cors());
+app.use(helmet());
 
-app.use(`/${BASE_URL}/${CURRENT_VERSION}/institutions`, institutions);
-app.use(`/${BASE_URL}/${CURRENT_VERSION}/departments`, departments);
+app.use(`/${BASE_URL}/${CURRENT_VERSION}/auth`, auth);
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);

@@ -7,6 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "git-cz",
+    "dev": "nodemon app.js",
     "lint:check": "npx eslint .",
     "prettier:check": "npx prettier --check .",
     "prettier:write": "npx pretty-quick --staged"
@@ -24,8 +25,13 @@
   "homepage": "https://github.com/otago-polytechnic-bit-courses/s1-23-id608001-project-2-node-js-express-pub-quiz-app-CalebStephens#readme",
   "dependencies": {
     "@prisma/client": "^4.14.1",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "nodemon": "^2.0.22"
   },
   "devDependencies": {
     "commitizen": "^4.3.0",
