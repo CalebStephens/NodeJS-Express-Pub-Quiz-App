@@ -1,12 +1,71 @@
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Joi from "joi";
 
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
+const registerSchema = Joi.object({
+  firstName: Joi.string().min(2).max(50).regex(/^[a-zA-Z]+$/).required().messages({
+    "string.base": "First name must only contain letters",
+    "string.empty": "First name is required",
+    "string.min": "First name must be at least 2 characters long",
+    "string.max": "First name must be at most 50 characters long",
+    "string.pattern.base": "First name must only contain letters",
+    "any.required": "First name is required"
+  }),
+  lastName: Joi.string().min(2).max(50).regex(/^[a-zA-Z]+$/).required().messages({
+    "string.base": "First name must only contain letters",
+    "string.empty": "First name is required",
+    "string.min": "First name must be at least 2 characters long",
+    "string.max": "First name must be at most 50 characters long",
+    "string.pattern.base": "First name must only contain letters",
+    "any.required": "Last name is required"
+  }),
+  username: Joi.string().min(5).max(10).alphanum().required().messages({
+    "string.base": "Username must only contain letters and numbers",
+    "string.empty": "Username is required",
+    "string.min": "Username must be at least 5 characters long",
+    "string.max": "Username must be at most 10 characters long",
+    "string.alphanum": "Username must only contain letters and numbers",
+    "any.required": "Username is required"
+  }),
+  email: Joi.string().email({ minDomainSegments: 2 }).required().messages({
+    "string.base": "Email is required",
+    "string.empty": "Email is required",
+    "string.email": "Email must be a valid email",
+    "string.minDomainSegments": "Email must be a valid email",
+    "any.required": "Email is required"
+  }),
+  password: Joi.string().min(8).max(16).pattern(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$/).required().messages({
+    "string.base": "Password must contain at least one letter, one number and one special character",
+    "string.empty": "Password is required",
+    "string.min": "Password must be at least 8 characters long",
+    "string.max": "Password must be at most 16 characters long",
+    "string.pattern.base": "Password must contain at least one letter, one number and one special character",
+    "any.required": "Password is required"
+  }),
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "string.base": "Passwords do not match",
+    "string.empty": "Passwords do not match",
+    "any.only": "Passwords do not match",
+    "any.required": "Confirm Password is required"
+  }),
+  role: Joi.string().valid("SUPER_ADMIN_USER", "BASIC_USER"),
+});
+
 const register = async (req, res) => {
   try {
-    const { name, username, email, password, role } = req.body;
+
+    const { error, value } = registerSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({
+        msg: error.details[0].message,
+      });
+    }
+
+    const { firstName, lastName, username, email, password, role } = req.body;
 
     let user = await prisma.user.findFirst({ where: {OR: [{email}, {username}] }});
 
@@ -27,8 +86,10 @@ const register = async (req, res) => {
      */
     const hashedPassword = await bcryptjs.hash(password, salt);
 
+    const avatar = `https://api.dicebear.com/6.x/pixel-art/svg?seed=${firstName}+${lastName}`
+
     user = await prisma.user.create({
-      data: { name, username, email, password: hashedPassword, role },
+      data: { firstName, lastName, username, email, password: hashedPassword, avatar, role },
     });
 
     /**
@@ -79,7 +140,8 @@ const login = async (req, res) => {
     const token = jwt.sign(
       {
         id: user.id,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
       },
       JWT_SECRET,
       { expiresIn: JWT_LIFETIME }
