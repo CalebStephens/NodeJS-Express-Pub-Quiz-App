@@ -100,7 +100,7 @@ const register = async (req, res) => {
     delete user.password;
 
     return res.status(201).json({
-      msg: "User successfully registered",
+      msg: `${user.username} successfully registered`,
       data: user,
     });
   } catch (err) {
@@ -148,7 +148,7 @@ const login = async (req, res) => {
     );
 
     return res.status(200).json({
-      msg: "User successfully logged in",
+      msg: `${user.username} successfully logged in`,
       token: token,
     });
   } catch (err) {

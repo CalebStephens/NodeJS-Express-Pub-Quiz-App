@@ -8,6 +8,7 @@ import helmet from "helmet";
  */
 import auth from "./routes/v1/auth.js";
 import authRoute from "./middleware/authRoute.js";
+import users from "./routes/v1/users.js";
 
 dotenv.config();
 
@@ -28,6 +29,11 @@ app.use(cors());
 app.use(helmet());
 
 app.use(`/${BASE_URL}/${CURRENT_VERSION}/auth`, auth);
+app.use(
+    `/${BASE_URL}/${CURRENT_VERSION}/users`,
+    authRoute,
+    users
+  );
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
