@@ -1,24 +1,20 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const roles = ["ADMIN_USER", "SUPER_ADMIN_USER"];
+const roles = ["SUPER_ADMIN_USER"];
 
 const getUser = async (req, res) => {
     try {
-      const { id } = req.params;
-      const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+      
+      console.log('here')
       if(req.user.id != req.params.id){
         return res.status(403).json({
           msg: "Not authorized to access this route",
         });
       }
-  
-      /**
-       * The findUnique function returns a single record using
-       * an id or unique identifier
-       */
-      // const record = await model.findUnique({where: { id: Number(id) }});
-      
+      const { id } = req.params;
+      const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+            
       if (!user) {
         return res
           .status(200)
@@ -56,6 +52,7 @@ const getUser = async (req, res) => {
       });
     }
   };
+
   const createRecord = async (req, res, model, modelName, include) => {
     try {
       /**
@@ -94,22 +91,24 @@ const getUser = async (req, res) => {
     }
   };
 
-  const updateRecord = async (req, res, model) => {
+  const updateUser = async (req, res) => {
     try {
-      const { id } = req.params;
-
-      const user = await prisma.user.findUnique({ where: { id: Number(req.user.id) } });
-      console.log(user)
-      if (!roles.includes(user.role)) {
+      if(req.user.id != req.params.id){
         return res.status(403).json({
           msg: "Not authorized to access this route",
-          
+        });
+      }
+      
+      if(req.body.hasOwnProperty('role')){
+        return res.status(403).json({
+          msg: "Cannot change your role",
         });
       }
 
+      const { id } = req.params;      
       const { ...data } = req.body;
   
-      let record = await model.findUnique({
+      let record = await prisma.user.findUnique({
         where: { id: Number(id) },
       });
   
@@ -117,7 +116,7 @@ const getUser = async (req, res) => {
         return res.status(200).json({ msg: `No record with the id: ${id} found` });
       }
   
-      record = await model.update({
+      record = await prisma.user.update({
         where: { id: Number(id) },
         data,
       });
@@ -167,6 +166,6 @@ export {
     getUser,
     getRecords,
     createRecord,
-    updateRecord,
+    updateUser,
     deleteRecord
   };

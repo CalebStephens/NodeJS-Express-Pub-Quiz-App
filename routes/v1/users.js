@@ -3,7 +3,7 @@ const router = Router();
 
 import {
   getUser,
-
+  updateUser
 } from "../../controllers/v1/users.js";
 
 router.route("/")
@@ -12,7 +12,7 @@ router.route("/")
 router
   .route("/:id")
   .get(getUser)
-  // .put(updateUsers)
+  .put(updateUser)
   // .delete(deleteUsers);
 
 export default router;
