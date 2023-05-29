@@ -1,13 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const roles = ["SUPER_ADMIN_USER"];
+const role = ["SUPER_ADMIN_USER"];
 
 const getUser = async (req, res) => {
     try {
-      
-      console.log('here')
-      if(req.user.id != req.params.id){
+        if(req.user.id != req.params.id){
         return res.status(403).json({
           msg: "Not authorized to access this route",
         });
@@ -29,20 +27,28 @@ const getUser = async (req, res) => {
     }
   };
 
-  const getRecords = async (req, res, model, modelName, include) => {
+  const getUsers = async (req, res) => {
     try {
-      const { id } = req.params;
+      
+      const { id } = req.user
+      const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+
+      if(user.role != role){
+        return res.status(403).json({
+          msg: "Not authorized to access this route",
+        });
+      }
   
       /**
        * The findUnique function returns a single record using
        * an id or unique identifier
        */
-      const records = include ? await model.findMany({include}) : await model.findMany();
+      const records = await prisma.user.findMany()
       
       if (!records) {
         return res
           .status(200)
-          .json({ msg: `No ${modelName}'s found` });
+          .json({ msg: `No user's found` });
       }
   
       return res.json({ data: records });
@@ -53,64 +59,31 @@ const getUser = async (req, res) => {
     }
   };
 
-  const createRecord = async (req, res, model, modelName, include) => {
-    try {
-      /**
-       * Get the authenticated user's id from the Request's user property
-       */
-      const { id } = req.user;
-      const user = await prisma.user.findUnique({ where: { id: Number(id) } });
-      // console.log(id)
-
-      if ((user.role !== "ADMIN_USER") || (user.role !== "SUPER_ADMIN_USER")) {
-        return res.status(403).json({
-          msg: "Not authorized to access this route",
-        });
-      }
-
-      console.log({data:{...req.body, userId: id }})
-  
-      /**
-       * Now you will know which authenticated user created the record
-       */
-      await model.create({
-        data:{...req.body, userId: id },
-    
-        });
-  
-      const newRecords = await model.findMany({include});
-  
-      return res.status(201).json({
-        msg: `${modelName} successfully created`,
-        data: newRecords,
-      });
-    } catch (err) {
-      return res.status(500).json({
-        msg: err.message,
-      });
-    }
-  };
+  //.filter((record) => record.role == "BASIC_USER" )
 
   const updateUser = async (req, res) => {
     try {
-      if(req.user.id != req.params.id){
-        return res.status(403).json({
-          msg: "Not authorized to access this route",
-        });
-      }
       
-      if(req.body.hasOwnProperty('role')){
-        return res.status(403).json({
-          msg: "Cannot change your role",
-        });
-      }
-
       const { id } = req.params;      
       const { ...data } = req.body;
   
       let record = await prisma.user.findUnique({
         where: { id: Number(id) },
       });
+      //allow basicand superadmin user to update their own stuff, or super admin update all basic users and not other superadmin
+      console.log(req, record.role)
+      console.log((req.body.role != role && record.role == role))
+      if((req.body.role != role && record.role == role) || req.user.id != req.params.id ){
+        return res.status(403).json({
+          msg: "Not authorized to access this route",
+        });
+      }
+      
+      if(req.body.hasOwnProperty('role') ){
+        return res.status(403).json({
+          msg: "Cannot change your role",
+        });
+      }
   
       if (!record) {
         return res.status(200).json({ msg: `No record with the id: ${id} found` });
@@ -122,7 +95,7 @@ const getUser = async (req, res) => {
       });
   
       return res.json({
-        msg: `Record with the id: ${id} successfully updated`,
+        msg: `${record.username} has been successfully updated`,
         data: record,
       });
     } catch (err) {
@@ -164,8 +137,7 @@ const getUser = async (req, res) => {
 export {
     prisma,
     getUser,
-    getRecords,
-    createRecord,
+    getUsers,
     updateUser,
     deleteRecord
   };

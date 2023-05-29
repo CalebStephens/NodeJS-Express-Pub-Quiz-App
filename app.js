@@ -9,8 +9,11 @@ import helmet from "helmet";
 import auth from "./routes/v1/auth.js";
 import authRoute from "./middleware/authRoute.js";
 import users from "./routes/v1/users.js";
+import seed from "./routes/v1/seed.js";
 
 dotenv.config();
+
+
 
 const app = express();
 
@@ -34,6 +37,7 @@ app.use(
     authRoute,
     users
   );
+app.use(`/${BASE_URL}/${CURRENT_VERSION}/seed`,authRoute, seed);
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);

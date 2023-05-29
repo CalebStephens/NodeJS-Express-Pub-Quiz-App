@@ -12,7 +12,12 @@
     "migrate": "npx prisma migrate dev",
     "lint:check": "npx eslint .",
     "prettier:check": "npx prettier --check .",
-    "prettier:write": "npx pretty-quick --staged"
+    "prettier:write": "npx pretty-quick --staged",
+    "seed:create": "npx prisma db seed"
+  },
+  "prisma": {
+    "seed": "node ./prisma/seed.js",
+    "schema": "prisma/schema.prisma"
   },
   "repository": {
     "type": "git",
@@ -27,6 +32,7 @@
   "homepage": "https://github.com/otago-polytechnic-bit-courses/s1-23-id608001-project-2-node-js-express-pub-quiz-app-CalebStephens#readme",
   "dependencies": {
     "@prisma/client": "^4.14.1",
+    "axios": "^1.4.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
