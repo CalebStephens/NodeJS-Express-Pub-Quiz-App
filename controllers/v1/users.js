@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const role = ["SUPER_ADMIN_USER"];
+const role = "SUPER_ADMIN_USER";
 
 const getUser = async (req, res) => {
     try {
@@ -63,17 +63,21 @@ const getUser = async (req, res) => {
 
   const updateUser = async (req, res) => {
     try {
-      
+      console.log(req)
       const { id } = req.params;      
       const { ...data } = req.body;
-  
+      
       let record = await prisma.user.findUnique({
         where: { id: Number(id) },
       });
+
+      let user = await prisma.user.findUnique({ where: { id: Number(req.user.id) } });
+
+      if (!record) {
+        return res.status(200).json({ msg: `No record with the id: ${id} found` });
+      }
       //allow basicand superadmin user to update their own stuff, or super admin update all basic users and not other superadmin
-      console.log(req, record.role)
-      console.log((req.body.role != role && record.role == role))
-      if((req.body.role != role && record.role == role) || req.user.id != req.params.id ){
+      if((user.id != record.id && user.role != role )|| user.role != role ){
         return res.status(403).json({
           msg: "Not authorized to access this route",
         });
@@ -84,11 +88,7 @@ const getUser = async (req, res) => {
           msg: "Cannot change your role",
         });
       }
-  
-      if (!record) {
-        return res.status(200).json({ msg: `No record with the id: ${id} found` });
-      }
-  
+
       record = await prisma.user.update({
         where: { id: Number(id) },
         data,
@@ -108,6 +108,13 @@ const getUser = async (req, res) => {
   const deleteRecord = async (req, res, model) => {
     try {
       const { id } = req.params;
+
+      if((req.body.role != role && record.role == role) || req.user.id != req.params.id ){
+        return res.status(403).json({
+          msg: "Not authorized to access this route",
+        });
+      }
+
   
       const record = await model.findUnique({
         where: { id: Number(id) },
