@@ -32,6 +32,7 @@ const getUser = async (req, res) => {
       
       const { id } = req.user
       const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+      console.log(req.user)
 
       if(user.role != role){
         return res.status(403).json({
@@ -105,18 +106,18 @@ const getUser = async (req, res) => {
     }
   };
 
-  const deleteRecord = async (req, res, model) => {
+  const deleteUser = async (req, res) => {
     try {
-      const { id } = req.params;
+      const user = await prisma.user.findUnique({ where: { id: Number(req.user.id) } });
 
-      if((req.body.role != role && record.role == role) || req.user.id != req.params.id ){
+      if(user.role != role){
         return res.status(403).json({
           msg: "Not authorized to access this route",
         });
       }
-
-  
-      const record = await model.findUnique({
+      
+      const { id } = req.params;
+      const record = await prisma.user.findUnique({
         where: { id: Number(id) },
       });
   
@@ -125,8 +126,14 @@ const getUser = async (req, res) => {
           .status(200)
           .json({ msg: `No record with the id: ${id} found` });
       }
+
+      if(record.role == role && user.id != record.id ){
+        return res.status(403).json({
+          msg: "Not authorized to access this route",
+        });
+      }
   
-      await model.delete({
+      await prisma.user.delete({
         where: { id: Number(id) },
       });
   
@@ -146,5 +153,5 @@ export {
     getUser,
     getUsers,
     updateUser,
-    deleteRecord
+    deleteUser
   };
