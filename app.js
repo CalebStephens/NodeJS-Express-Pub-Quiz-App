@@ -10,6 +10,8 @@ import auth from "./routes/v1/auth.js";
 import authRoute from "./middleware/authRoute.js";
 import users from "./routes/v1/users.js";
 import seed from "./routes/v1/seed.js";
+import categories from "./routes/v1/category.js";
+import quiz from "./routes/v1/quiz.js";
 
 dotenv.config();
 
@@ -38,6 +40,9 @@ app.use(
     users
   );
 app.use(`/${BASE_URL}/${CURRENT_VERSION}/seed`,authRoute, seed);
+
+app.use(`/${BASE_URL}/${CURRENT_VERSION}/category`, categories)
+app.use(`/${BASE_URL}/${CURRENT_VERSION}/quiz`,authRoute , quiz)
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
