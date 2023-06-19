@@ -5,7 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import cacheRoute from "./middleware/cacheRoute.js";
 import compression from "compression";
-
+import listEndpoints from 'express-list-endpoints'
 /**
  * You will create the routes for institutions and departments later
  */
@@ -29,12 +29,23 @@ const CURRENT_VERSION = "v1";
 
 const PORT = process.env.PORT;
 
-app.use(urlencoded({ extended: false }));
-app.use(json());
-app.use(cors());
-app.use(helmet());
-app.use(cacheRoute);
-app.use(compression());
+/**
+ * When called generate a list of all available endpoints
+ * @returns list of all available endpoint
+ */
+const getAvailableEndpoints = () => {
+  const endpoints = listEndpoints(app)
+
+  const data = []
+
+  endpoints.forEach((endpoint) => {
+    if (endpoint.path.includes('/ ') || endpoint.path.includes(':id')) return
+
+    data.push(`${endpoint.path}`)
+  })
+
+  return data
+}
 app.use(
   rateLimit({
     windowMs: 60 * 1000, // 1 minute duration in milliseconds
@@ -43,6 +54,25 @@ app.use(
     headers: true,
   })
 )
+app.use(urlencoded({ extended: false }));
+app.use(json());
+app.use(cors());
+app.use(helmet());
+app.use(cacheRoute);
+app.use(compression());
+
+
+app.get(`/${BASE_URL}/${CURRENT_VERSION}/`, (req, res) =>
+  res.status(200).json(getAvailableEndpoints())
+)
+
+/**
+ * Return a message when user tries to reach an endpoint that does not exist
+ */
+// app.get('*', (req, res) =>
+//   res.json({ msg: 'Sorry this end point does not exist.' })
+// )
+
 
 app.use(`/${BASE_URL}/${CURRENT_VERSION}/auth`, auth);
 app.use(
