@@ -12,10 +12,8 @@ const cacheRoute = (req, res, next) => {
     cache.del(key);
     return next();
   } else if (cachedRes) {
-    console.log("Cache hit");
     return res.json(cachedRes);
   } else {
-    console.log("Cache miss");
     res.originalSend = res.json;
     res.json = (body) => {
       res.originalSend(body);

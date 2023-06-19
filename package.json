@@ -13,7 +13,8 @@
     "lint:check": "npx eslint .",
     "prettier:check": "npx prettier --check .",
     "prettier:write": "npx pretty-quick --staged",
-    "seed:create": "npx prisma db seed"
+    "seed:create": "npx prisma db seed",
+    "studio": "npx prisma studio"
   },
   "prisma": {
     "seed": "node ./prisma/seed.js",
@@ -38,6 +39,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-list-endpoints": "^6.0.0",
     "express-rate-limit": "^6.7.0",
     "helmet": "^7.0.0",
     "joi": "^17.9.2",
