@@ -30,13 +30,17 @@ const registerSchema = Joi.object({
     "string.alphanum": "Username must only contain letters and numbers",
     "any.required": "Username is required"
   }),
-  email: Joi.string().email({ minDomainSegments: 2 }).required().messages({
-    "string.base": "Email is required",
-    "string.empty": "Email is required",
-    "string.email": "Email must be a valid email",
-    "string.minDomainSegments": "Email must be a valid email",
-    "any.required": "Email is required"
-  }),
+  email: Joi.string()
+    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+    .email({ minDomainSegments: 2 })
+    
+    .required().messages({
+      "string.base": "Email must be a valid email",
+      "string.empty": "Email is required",
+      "string.pattern.base": "Email must be a valid email",
+      "string.email": "Email must be a valid email",
+      "any.required": "Email is required"
+    }),
   password: Joi.string().min(8).max(16).pattern(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]+$/).required().messages({
     "string.base": "Password must contain at least one letter, one number and one special character",
     "string.empty": "Password is required",
@@ -64,6 +68,7 @@ const register = async (req, res) => {
         msg: error.details[0].message,
       });
     }
+    
 
     const { firstName, lastName, username, email, password, role } = req.body;
 
