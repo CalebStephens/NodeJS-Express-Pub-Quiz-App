@@ -88,3 +88,5 @@ app.use(`/${BASE_URL}/${CURRENT_VERSION}/quiz`,authRoute , quiz)
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
+
+export default app;

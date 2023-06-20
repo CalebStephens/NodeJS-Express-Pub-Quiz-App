@@ -5,7 +5,6 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "commit": "git-cz",
     "dev": "nodemon app.js",
     "migration": "npx prisma migrate reset && npx prisma migrate dev",
@@ -14,7 +13,8 @@
     "prettier:check": "npx prettier --check .",
     "prettier:write": "npx pretty-quick --staged",
     "seed:create": "npx prisma db seed",
-    "studio": "npx prisma studio"
+    "studio": "npx prisma studio",
+    "test": "npx prisma migrate reset && npx mocha --timeout 10000 --exit"
   },
   "prisma": {
     "seed": "node ./prisma/seed.js",
@@ -48,12 +48,15 @@
     "nodemon": "^2.0.22"
   },
   "devDependencies": {
+    "chai": "^4.3.7",
+    "chai-http": "^4.4.0",
     "commitizen": "^4.3.0",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.41.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^4.2.1",
+    "mocha": "^10.2.0",
     "prettier": "^2.8.8",
     "pretty-quick": "^3.1.3",
     "prisma": "^4.14.1"
