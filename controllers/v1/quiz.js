@@ -185,6 +185,29 @@ const getPastQuizzes = async (req, res) => {
   }
 };
 
+const getPresentQuizzes = async (req, res) => {
+  try {
+    const records = await prisma.quiz.findMany({
+      include: {
+        questions: true,
+      },
+    });
+
+    const presentQuizzes = records.filter((record) => {
+      return new Date(record.endDate) < new Date() && new Date(record.startDate) > new Date();
+    });
+    if(!presentQuizzes.length){
+      return res.status(200).json({ msg: "No present quizzes" });
+    }
+
+    return res.status(200).json({ data: presentQuizzes });
+  } catch {
+    return res.status(500).json({
+      msg: err.message,
+    });
+  }
+};
+
 
 
 
@@ -300,4 +323,4 @@ const deleteQuiz = async (req, res) => {
   }
 };
 
-export { createQuiz, getAllQuizzes, participateQuiz, deleteQuiz, getFutureQuizzes, getPastQuizzes };
+export { createQuiz, getAllQuizzes, participateQuiz, deleteQuiz, getFutureQuizzes, getPastQuizzes, getPresentQuizzes };
