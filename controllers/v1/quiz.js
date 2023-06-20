@@ -125,7 +125,7 @@ const createQuiz = async (req, res) => {
   }
 };
 
-const getQuiz = async (req, res) => {
+const getAllQuizzes = async (req, res) => {
   try {
     const records = await prisma.quiz.findMany({
       include: {
@@ -139,6 +139,29 @@ const getQuiz = async (req, res) => {
     });
   }
 };
+const getFutureQuizzes = async (req, res) => {
+  try {
+    const records = await prisma.quiz.findMany({
+      include: {
+        questions: true,
+      },
+    });
+
+    const futureQuizzes = records.filter((record) => {
+      return new Date(record.startDate) > new Date();
+    });
+
+    return res.status(200).json({ data: futureQuizzes });
+  } catch {
+    return res.status(500).json({
+      msg: err.message,
+    });
+  }
+};
+
+
+
+
 
 const participateQuiz = async (req, res) => {
   try {
@@ -149,11 +172,34 @@ const participateQuiz = async (req, res) => {
         questions: true,
       },
     });
+
+    // if(new Date(record.startDate) > new Date()){
+    //   prisma.futureQuiz.create({
+    //     data: {
+    //       userId: req.user.id,
+    //       quizId: record.id,
+    //     },
+    //   });
+    //   return res.status(200).json({
+    //     msg: "Quiz has not started yet",
+    //   });
+    // }
+    // if(new Date(record.endDate) < new Date()){
+    //   prisma.pastQuiz.create({
+    //     data: {
+    //       userId: req.user.id,
+    //       quizId: record.id,
+    //     },
+    //   });
+    //   return res.status(200).json({
+    //     msg: "Quiz has not started yet",
+    //   });
+    // }
+
     const answers = req.body.answers;
     let score = 0;
     let isCorrect = false;
     const comparedAnswers = answers.map((answer, index) => {
-      console.log("here", record.questions[index].correctAnswer, answer)
       if (answer == record.questions[index].correctAnswer) {
         score++;
         isCorrect = true;
@@ -171,6 +217,14 @@ const participateQuiz = async (req, res) => {
     await prisma.userQuestionAnswer.createMany({
       data: comparedAnswers,
     });
+console.log("here");
+    await prisma.userParticipateQuiz.create({
+      data: {
+        userId: req.user.id,
+        quizId: record.id,
+      },
+    });
+    console.log("nothere");
 
     const user = await prisma.user.findUnique({
       where: { id: Number(req.user.id) },
@@ -189,7 +243,6 @@ const participateQuiz = async (req, res) => {
     });
 
     const average = averageScore.map((score) => score.score).reduce((a, b) => a + b, 0) / averageScore.length;
-    console.log(average)
 
     return res
       .status(200)
@@ -236,4 +289,4 @@ const deleteQuiz = async (req, res) => {
   }
 };
 
-export { createQuiz, getQuiz, participateQuiz, deleteQuiz };
+export { createQuiz, getAllQuizzes, participateQuiz, deleteQuiz, getFutureQuizzes };
