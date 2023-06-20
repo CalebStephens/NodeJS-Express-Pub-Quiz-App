@@ -158,7 +158,25 @@ const getFutureQuizzes = async (req, res) => {
     });
   }
 };
+const getPastQuizzes = async (req, res) => {
+  try {
+    const records = await prisma.quiz.findMany({
+      include: {
+        questions: true,
+      },
+    });
 
+    const pastQuizzes = records.filter((record) => {
+      return new Date(record.endDate) < new Date();
+    });
+
+    return res.status(200).json({ data: pastQuizzes });
+  } catch {
+    return res.status(500).json({
+      msg: err.message,
+    });
+  }
+};
 
 
 
@@ -217,14 +235,12 @@ const participateQuiz = async (req, res) => {
     await prisma.userQuestionAnswer.createMany({
       data: comparedAnswers,
     });
-console.log("here");
     await prisma.userParticipateQuiz.create({
       data: {
         userId: req.user.id,
         quizId: record.id,
       },
     });
-    console.log("nothere");
 
     const user = await prisma.user.findUnique({
       where: { id: Number(req.user.id) },
@@ -289,4 +305,4 @@ const deleteQuiz = async (req, res) => {
   }
 };
 
-export { createQuiz, getAllQuizzes, participateQuiz, deleteQuiz, getFutureQuizzes };
+export { createQuiz, getAllQuizzes, participateQuiz, deleteQuiz, getFutureQuizzes, getPastQuizzes };
