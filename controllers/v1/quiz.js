@@ -151,6 +151,10 @@ const getFutureQuizzes = async (req, res) => {
       return new Date(record.startDate) > new Date();
     });
 
+    if(!futureQuizzes.length){
+      return res.status(200).json({ msg: "No future quizzes" });
+    }
+
     return res.status(200).json({ data: futureQuizzes });
   } catch {
     return res.status(500).json({
@@ -169,6 +173,9 @@ const getPastQuizzes = async (req, res) => {
     const pastQuizzes = records.filter((record) => {
       return new Date(record.endDate) < new Date();
     });
+    if(!pastQuizzes.length){
+      return res.status(200).json({ msg: "No past quizzes" });
+    }
 
     return res.status(200).json({ data: pastQuizzes });
   } catch {
@@ -191,28 +198,16 @@ const participateQuiz = async (req, res) => {
       },
     });
 
-    // if(new Date(record.startDate) > new Date()){
-    //   prisma.futureQuiz.create({
-    //     data: {
-    //       userId: req.user.id,
-    //       quizId: record.id,
-    //     },
-    //   });
-    //   return res.status(200).json({
-    //     msg: "Quiz has not started yet",
-    //   });
-    // }
-    // if(new Date(record.endDate) < new Date()){
-    //   prisma.pastQuiz.create({
-    //     data: {
-    //       userId: req.user.id,
-    //       quizId: record.id,
-    //     },
-    //   });
-    //   return res.status(200).json({
-    //     msg: "Quiz has not started yet",
-    //   });
-    // }
+    if(new Date(record.startDate) > new Date()){
+      return res.status(400).json({
+        msg: "Quiz has not started yet",
+      });
+    }
+    if(new Date(record.endDate) < new Date()){
+      return res.status(400).json({
+        msg: "Quiz has finished",
+      });
+    }
 
     const answers = req.body.answers;
     let score = 0;
