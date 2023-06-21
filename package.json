@@ -12,6 +12,7 @@
     "lint:check": "npx eslint .",
     "prettier:check": "npx prettier --check .",
     "prettier:write": "npx pretty-quick --staged",
+    "prettier": "npx prettier --write . ",
     "seed:create": "npx prisma db seed",
     "studio": "npx prisma studio",
     "test": "npx prisma migrate reset && npx mocha --timeout 10000 --exit"
@@ -33,6 +34,7 @@
   "homepage": "https://github.com/otago-polytechnic-bit-courses/s1-23-id608001-project-2-node-js-express-pub-quiz-app-CalebStephens#readme",
   "dependencies": {
     "@prisma/client": "^4.14.1",
+    "async": "^3.2.4",
     "axios": "^1.4.0",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",

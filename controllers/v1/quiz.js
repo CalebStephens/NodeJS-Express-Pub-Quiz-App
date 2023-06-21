@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-import axios from "axios";
-import Joi from "joi";
+import axios from 'axios';
+import Joi from 'joi';
 
 const quizSchema = Joi.object({
   name: Joi.string()
@@ -10,47 +10,47 @@ const quizSchema = Joi.object({
     .regex(/^[a-zA-Z]+$/)
     .required()
     .messages({
-      "string.base": "Name must only contain letters",
-      "string.empty": "Name is required",
-      "string.min": "Name must be at least 5 characters long",
-      "string.max": "Name must be at most 30 characters long",
-      "string.pattern.base": "Name must only contain letters",
-      "any.required": "Name is required",
+      'string.base': 'Name must only contain letters',
+      'string.empty': 'Name is required',
+      'string.min': 'Name must be at least 5 characters long',
+      'string.max': 'Name must be at most 30 characters long',
+      'string.pattern.base': 'Name must only contain letters',
+      'any.required': 'Name is required',
     }),
   numOfQuestions: Joi.number().valid(10).required().messages({
-    "number.base": "Questions must be a number",
-    "any.only": "Questions must be exactly 10",
-    "any.required": "Questions is required",
+    'number.base': 'Questions must be a number',
+    'any.only': 'Questions must be exactly 10',
+    'any.required': 'Questions is required',
   }),
   startDate: Joi.string()
     .pattern(/^\d{4}\/\d{2}\/\d{2}$/)
     .required()
     .messages({
-      "string.base": "Start date must be a string",
-      "string.pattern.base": "Start date must be in the format YYYY/MM/DD",
-      "any.required": "Start date is required",
+      'string.base': 'Start date must be a string',
+      'string.pattern.base': 'Start date must be in the format YYYY/MM/DD',
+      'any.required': 'Start date is required',
     }),
   endDate: Joi.string()
     .pattern(/^\d{4}\/\d{2}\/\d{2}$/)
     .required()
     .messages({
-      "string.base": "End date must be a string",
-      "string.pattern.base": "End date must be in the format YYYY/MM/DD",
-      "any.required": "End date is required",
+      'string.base': 'End date must be a string',
+      'string.pattern.base': 'End date must be in the format YYYY/MM/DD',
+      'any.required': 'End date is required',
     }),
-  categoryID: Joi.number().required().messages({
-    "number.base": "Category ID must be a number",
-    "any.required": "Category ID is required",
+  categoryId: Joi.number().required().messages({
+    'number.base': 'Category ID must be a number',
+    'any.required': 'Category ID is required',
   }),
   type: Joi.string().required().messages({
-    "any.required": "Type is required",
+    'any.required': 'Type is required',
   }),
   difficulty: Joi.string().required().messages({
-    "any.required": "Difficulty is required",
+    'any.required': 'Difficulty is required',
   }),
 });
 
-const role = "SUPER_ADMIN_USER";
+const role = 'SUPER_ADMIN_USER';
 
 const createQuiz = async (req, res) => {
   const user = await prisma.user.findUnique({
@@ -58,7 +58,7 @@ const createQuiz = async (req, res) => {
   });
   if (user.role !== role) {
     return res.status(403).json({
-      msg: "Not authorized to access this route",
+      msg: 'Not authorized to access this route',
     });
   }
   const { error } = quizSchema.validate(req.body);
@@ -82,25 +82,25 @@ const createQuiz = async (req, res) => {
 
   if (startDate > endDate) {
     return res.json({
-      msg: "Start date cannot be greater than end date",
+      msg: 'Start date cannot be greater than end date',
     });
   }
   if (diffDays > 5) {
     return res.json({
-      msg: "Quiz duration cannot be longer than five days",
+      msg: 'Quiz duration cannot be longer than five days',
     });
   }
 
-  const baseURL = "https://opentdb.com/api.php?";
+  const baseURL = 'https://opentdb.com/api.php?';
 
   const data = await axios.get(
-    `${baseURL}amount=${req.body.numOfQuestions}&category=${req.body.categoryID}&difficulty=${req.body.difficulty}&type=${req.body.type}`
+    `${baseURL}amount=${req.body.numOfQuestions}&category=${req.body.categoryId}&difficulty=${req.body.difficulty}&type=${req.body.type}`
   );
-  console.log(data.data.results);
+  console.log(req.body);
   try {
     await prisma.quiz.create({
       data: {
-        categoryId: req.body.categoryID,
+        categoryId: req.body.categoryId,
         difficulty: req.body.difficulty,
         name: req.body.name,
         type: req.body.type,
@@ -117,7 +117,7 @@ const createQuiz = async (req, res) => {
         },
       },
     });
-    return res.status(201).json({ msg: "Quiz successfully created" });
+    return res.status(201).json({ msg: 'Quiz successfully created' });
   } catch (err) {
     return res.status(500).json({
       msg: err.message,
@@ -151,8 +151,8 @@ const getFutureQuizzes = async (req, res) => {
       return new Date(record.startDate) > new Date();
     });
 
-    if(!futureQuizzes.length){
-      return res.status(200).json({ msg: "No future quizzes" });
+    if (!futureQuizzes.length) {
+      return res.status(200).json({ msg: 'No future quizzes' });
     }
 
     return res.status(200).json({ data: futureQuizzes });
@@ -173,8 +173,8 @@ const getPastQuizzes = async (req, res) => {
     const pastQuizzes = records.filter((record) => {
       return new Date(record.endDate) < new Date();
     });
-    if(!pastQuizzes.length){
-      return res.status(200).json({ msg: "No past quizzes" });
+    if (!pastQuizzes.length) {
+      return res.status(200).json({ msg: 'No past quizzes' });
     }
 
     return res.status(200).json({ data: pastQuizzes });
@@ -194,10 +194,13 @@ const getPresentQuizzes = async (req, res) => {
     });
 
     const presentQuizzes = records.filter((record) => {
-      return new Date(record.endDate) < new Date() && new Date(record.startDate) > new Date();
+      return (
+        new Date(record.endDate) < new Date() &&
+        new Date(record.startDate) > new Date()
+      );
     });
-    if(!presentQuizzes.length){
-      return res.status(200).json({ msg: "No present quizzes" });
+    if (!presentQuizzes.length) {
+      return res.status(200).json({ msg: 'No present quizzes' });
     }
 
     return res.status(200).json({ data: presentQuizzes });
@@ -207,9 +210,6 @@ const getPresentQuizzes = async (req, res) => {
     });
   }
 };
-
-
-
 
 const participateQuiz = async (req, res) => {
   try {
@@ -221,14 +221,20 @@ const participateQuiz = async (req, res) => {
       },
     });
 
-    if(new Date(record.startDate) > new Date()){
+    if (new Date(record.startDate) > new Date()) {
       return res.status(400).json({
-        msg: "Quiz has not started yet",
+        msg: 'Quiz has not started yet',
       });
     }
-    if(new Date(record.endDate) < new Date()){
+    if (new Date(record.endDate) < new Date()) {
       return res.status(400).json({
-        msg: "Quiz has finished",
+        msg: 'Quiz has finished',
+      });
+    }
+
+    if (req.body.answers.length !== record.questions.length) {
+      return res.status(400).json({
+        msg: 'Number of answers must be equal to number of questions',
       });
     }
 
@@ -276,13 +282,13 @@ const participateQuiz = async (req, res) => {
       where: { quizId: record.id },
     });
 
-    const average = averageScore.map((score) => score.score).reduce((a, b) => a + b, 0) / averageScore.length;
+    const average =
+      averageScore.map((score) => score.score).reduce((a, b) => a + b, 0) /
+      averageScore.length;
 
-    return res
-      .status(200)
-      .json({
-        data: `${user.username} has successfully participated in quiz ${record.name}, your score was ${score}/${record.questions.length}. Average score is ${average}`,
-      });
+    return res.status(200).json({
+      data: `${user.username} has successfully participated in quiz ${record.name}, your score was ${score}/${record.questions.length}. Average score is ${average}`,
+    });
   } catch (err) {
     return res.status(500).json({
       msg: err.message,
@@ -297,7 +303,7 @@ const deleteQuiz = async (req, res) => {
     });
     if (user.role !== role) {
       return res.status(403).json({
-        msg: "Not authorized to access this route",
+        msg: 'Not authorized to access this route',
       });
     }
     const { id } = req.params;
@@ -307,7 +313,7 @@ const deleteQuiz = async (req, res) => {
     });
     if (!record) {
       return res.status(404).json({
-        msg: "Quiz not found",
+        msg: 'Quiz not found',
       });
     }
     await prisma.quiz.delete({
@@ -323,4 +329,12 @@ const deleteQuiz = async (req, res) => {
   }
 };
 
-export { createQuiz, getAllQuizzes, participateQuiz, deleteQuiz, getFutureQuizzes, getPastQuizzes, getPresentQuizzes };
+export {
+  createQuiz,
+  getAllQuizzes,
+  participateQuiz,
+  deleteQuiz,
+  getFutureQuizzes,
+  getPastQuizzes,
+  getPresentQuizzes,
+};

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router } from 'express';
 const router = Router();
 
 import {
@@ -6,14 +6,10 @@ import {
   getUsers,
   updateUser,
   deleteUser,
-} from "../../controllers/v1/users.js";
+} from '../../controllers/v1/users.js';
 
-router.route("/").get(getUsers)
+router.route('/').get(getUsers);
 // .post(createUsers);
-router
-  .route("/:id")
-  .get(getUser)
-  .put(updateUser)
-  .delete(deleteUser);
+router.route('/:id').get(getUser).put(updateUser).delete(deleteUser);
 
 export default router;
