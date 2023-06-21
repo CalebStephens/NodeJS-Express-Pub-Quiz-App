@@ -1,8 +1,11 @@
-// This code module provides functionality for user registration and login in an application. 
-// It includes validation of user input using the Joi library,
-//  hashing and salting of passwords using bcryptjs, 
-// and generation of JSON Web Tokens (JWT) for user authentication using the jwt library.
-//  The code utilizes the Prisma client for interacting with the database to create and retrieve user records.
+/** 
+ * Authorisation Controller
+* This code module provides functionality for user registration and login in an application. 
+* It includes validation of user input using the Joi library,
+*  hashing and salting of passwords using bcryptjs, 
+* and generation of JSON Web Tokens (JWT) for user authentication using the jwt library.
+*  The code utilizes the Prisma client for interacting with the database to create and retrieve user records.
+*/
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import Joi from 'joi';
@@ -85,7 +88,7 @@ const register = async (req, res) => {
   try {
     // Validate the request body against a registration schema
     const { error, value } = registerSchema.validate(req.body);
-
+    console.log('reg')
     if (error) {
       // If validation fails, return a 400 Bad Request response with the error message
       return res.status(400).json({
@@ -100,10 +103,7 @@ const register = async (req, res) => {
       });
     }
 
-    console.log(req.body)
     const { firstName, lastName, username, email, password, role } = req.body;
-    console.log(firstName, lastName, username, email, password, role)
-
     // Check if a user with the email or username already exists
     let user = await prisma.user.findFirst({
       where: { OR: [{ email }, { username }] },
@@ -132,6 +132,8 @@ const register = async (req, res) => {
     // Generate an avatar URL based on the user's first name and last name
     const avatar = `https://api.dicebear.com/6.x/pixel-art/svg?seed=${firstName}+${lastName}`;
 
+    
+
     // Create a new user in the database
     user = await prisma.user.create({
       data: {
@@ -141,7 +143,7 @@ const register = async (req, res) => {
         email,
         password: hashedPassword,
         avatar,
-        role,
+        role: role ? role : 'BASIC_USER',
       },
     });
 
@@ -184,7 +186,6 @@ const login = async (req, res) => {
      * hash, i.e., user's hashed password
      */
     const isPasswordCorrect = await bcryptjs.compare(password, user.password);
-    console.log(password, user.password, password === user.password, isPasswordCorrect);
     if(!isPasswordCorrect) {
       return res.status(401).json({ msg: 'Invalid password' });
     }
