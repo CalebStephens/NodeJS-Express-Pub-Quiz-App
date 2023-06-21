@@ -1,3 +1,20 @@
+/**
+ * Quiz Management API
+ *
+ * This file contains API endpoints for creating, retrieving, and managing quizzes.
+ * It utilizes Prisma for database operations and Joi for input validation.
+ *
+ * Functions:
+ * - createQuiz: Creates a new quiz with the provided data.
+ * - getAllQuizzes: Retrieves all quizzes from the database.
+ * - participateQuiz: Allows a user to participate in a quiz and calculates their score.
+ * - deleteQuiz: Deletes a quiz with the specified ID.
+ * - getFutureQuizzes: Retrieves quizzes that are scheduled for the future.
+ * - getPastQuizzes: Retrieves quizzes that have already ended.
+ * - getPresentQuizzes: Retrieves quizzes that are currently ongoing.
+ *
+ * Prisma Client instance and the above functions are exported for use in other files.
+ */
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 import axios from 'axios';
@@ -52,52 +69,105 @@ const quizSchema = Joi.object({
 
 const role = 'SUPER_ADMIN_USER';
 
-const createQuiz = async (req, res) => {
-  const user = await prisma.user.findUnique({
-    where: { id: Number(req.user.id) },
-  });
-  if (user.role !== role) {
-    return res.status(403).json({
-      msg: 'Not authorized to access this route',
-    });
-  }
-  const { error } = quizSchema.validate(req.body);
-  if (error) {
-    return res.status(400).json({
-      msg: error.details[0].message,
-    });
-  }
-
-  const todaysDate = new Date().getTime();
-  const startDate = new Date(req.body.startDate).getTime();
-  const endDate = new Date(req.body.endDate).getTime();
-  const diffTime = Math.abs(endDate - startDate);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (startDate < todaysDate) {
-    return res.json({
-      msg: "Start date cannot be before today's date",
-    });
-  }
-
-  if (startDate > endDate) {
-    return res.json({
-      msg: 'Start date cannot be greater than end date',
-    });
-  }
-  if (diffDays > 5) {
-    return res.json({
-      msg: 'Quiz duration cannot be longer than five days',
-    });
-  }
-
-  const baseURL = 'https://opentdb.com/api.php?';
-
-  const data = await axios.get(
-    `${baseURL}amount=${req.body.numOfQuestions}&category=${req.body.categoryId}&difficulty=${req.body.difficulty}&type=${req.body.type}`
-  );
-  console.log(req.body);
+/**
+ * Create Quiz
+ *
+ * This function creates a new quiz with the provided data.
+ * It performs validation on the request body using the quizSchema.
+ * It checks if the user is authorized to create a quiz based on their role.
+ * It validates the start and end dates of the quiz.
+ * It makes an API request to fetch quiz questions from an external API.
+ * It saves the quiz and its questions in the database using Prisma.
+ * It returns a response with the success message if the quiz is created successfully.
+ * If any error occurs during the process, it returns an error response with the error message.
+ */
+const getDatedQuizzes = async (req, res) => {
   try {
+    const records = await prisma.quiz.findMany({
+      include: {
+        questions: true,
+      },
+    });
+    if (req.params.date === 'future') {
+      return await res.status(200).json({
+        msg: 'No future quizzes',
+        data: records.filter((record) => {
+          return new Date(record.startDate) > new Date();
+        }),
+      });
+    };
+    if (req.params.date === 'past') {
+      return await res.status(200).json({
+        msg: 'No future quizzes',
+        data: records.filter((record) => {
+          return new Date(record.endDate) < new Date();
+        }),
+      });
+    }
+    if (req.params.date === 'present') {
+      return await res.status(200).json({
+        msg: 'No future quizzes',
+        data: records.filter((record) => {
+          return (new Date(record.endDate) < new Date() &&
+          new Date(record.startDate) > new Date());
+        }),
+      });
+    };
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const createQuiz = async (req, res) => {
+  try {
+    // Check user authorization based on role
+    const user = await prisma.user.findUnique({
+      where: { id: Number(req.user.id) },
+    });
+    if (user.role !== role) {
+      return res.status(403).json({
+        msg: 'Not authorized to access this route',
+      });
+    }
+    // Validate request body using quizSchema
+    const { error } = quizSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        msg: error.details[0].message,
+      });
+    }
+
+    // Validate start and end dates of the quiz
+    const todaysDate = new Date().getTime();
+    const startDate = new Date(req.body.startDate).getTime();
+    const endDate = new Date(req.body.endDate).getTime();
+    const diffTime = Math.abs(endDate - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (startDate < todaysDate) {
+      return res.json({
+        msg: "Start date cannot be before today's date",
+      });
+    }
+
+    if (startDate > endDate) {
+      return res.json({
+        msg: 'Start date cannot be greater than end date',
+      });
+    }
+    if (diffDays > 5) {
+      return res.json({
+        msg: 'Quiz duration cannot be longer than five days',
+      });
+    }
+
+    const baseURL = 'https://opentdb.com/api.php?';
+    // Fetch quiz questions from an external API
+    const data = await axios.get(
+      `${baseURL}amount=${req.body.numOfQuestions}&category=${req.body.categoryId}&difficulty=${req.body.difficulty}&type=${req.body.type}`
+    );
+
+    // Save the quiz and its questions in the database using Prisma
     await prisma.quiz.create({
       data: {
         categoryId: req.body.categoryId,
@@ -139,14 +209,27 @@ const getAllQuizzes = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get Future Quizzes
+ *
+ * This function retrieves future quizzes from the database.
+ * It fetches all quizzes along with their questions from the database using Prisma.
+ * It filters the quizzes based on their start date, returning only the future quizzes.
+ * If no future quizzes are found, it returns a response with a message indicating so.
+ * If future quizzes are found, it returns a response with the list of future quizzes.
+ * If any error occurs during the process, it returns an error response with the error message.
+ */
 const getFutureQuizzes = async (req, res) => {
   try {
+    // Retrieve all quizzes from the database along with their questions
     const records = await prisma.quiz.findMany({
       include: {
         questions: true,
       },
     });
 
+    // Filter the quizzes to get only the future quizzes
     const futureQuizzes = records.filter((record) => {
       return new Date(record.startDate) > new Date();
     });
@@ -162,14 +245,27 @@ const getFutureQuizzes = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get Past Quizzes
+ *
+ * This function retrieves past quizzes from the database.
+ * It fetches all quizzes along with their questions from the database using Prisma.
+ * It filters the quizzes based on their end date, returning only the past quizzes.
+ * If no past quizzes are found, it returns a response with a message indicating so.
+ * If past quizzes are found, it returns a response with the list of past quizzes.
+ * If any error occurs during the process, it returns an error response with the error message.
+ */
 const getPastQuizzes = async (req, res) => {
   try {
+    // Retrieve all quizzes from the database along with their questions
     const records = await prisma.quiz.findMany({
       include: {
         questions: true,
       },
     });
 
+    // Filter the quizzes to get only the past quizzes
     const pastQuizzes = records.filter((record) => {
       return new Date(record.endDate) < new Date();
     });
@@ -185,14 +281,26 @@ const getPastQuizzes = async (req, res) => {
   }
 };
 
+/**
+ * Get Present Quizzes
+ *
+ * This function retrieves present quizzes from the database.
+ * It fetches all quizzes along with their questions from the database using Prisma.
+ * It filters the quizzes based on their start and end dates, returning only the quizzes that are currently ongoing.
+ * If no present quizzes are found, it returns a response with a message indicating so.
+ * If present quizzes are found, it returns a response with the list of present quizzes.
+ * If any error occurs during the process, it returns an error response with the error message.
+ */
 const getPresentQuizzes = async (req, res) => {
   try {
+    // Retrieve all quizzes from the database along with their questions
     const records = await prisma.quiz.findMany({
       include: {
         questions: true,
       },
     });
 
+    // Filter the quizzes to get only the present quizzes
     const presentQuizzes = records.filter((record) => {
       return (
         new Date(record.endDate) < new Date() &&
@@ -211,33 +319,55 @@ const getPresentQuizzes = async (req, res) => {
   }
 };
 
+/**
+ * Participate in Quiz
+ *
+ * This function allows a user to participate in a quiz.
+ * It retrieves the quiz record from the database based on the provided ID.
+ * It checks if the quiz has started and if it has finished, returning error responses if applicable.
+ * It validates the number of answers provided by the user, ensuring it matches the number of questions in the quiz.
+ * It compares the user's answers with the correct answers and calculates the score.
+ * It creates records for the user's answers, user participation in the quiz, and user quiz score in the database.
+ * It calculates the average score for the quiz.
+ * Finally, it returns a response with the participation details, including the user's score and the average score.
+ * If any error occurs during the process, it returns an error response with the error message.
+ */
 const participateQuiz = async (req, res) => {
   try {
+    // Retrieve the quiz ID from the request parameters
     const { id } = req.params;
+    console.log(req.params);
+    console.log('part');
+    // Retrieve the quiz record from the database along with its questions
     const record = await prisma.quiz.findUnique({
       where: { id: Number(id) },
       include: {
         questions: true,
       },
     });
+    console.log(record.questions);
 
-    if (new Date(record.startDate) > new Date()) {
+    // Check if the quiz has started
+    if (new Date(record.startDate) >= new Date()) {
       return res.status(400).json({
         msg: 'Quiz has not started yet',
       });
     }
-    if (new Date(record.endDate) < new Date()) {
+     // Check if the quiz has finished
+    if (new Date(record.endDate) <= new Date()) {
       return res.status(400).json({
         msg: 'Quiz has finished',
       });
     }
 
+    // Validate the number of answers provided by the user
     if (req.body.answers.length !== record.questions.length) {
       return res.status(400).json({
         msg: 'Number of answers must be equal to number of questions',
       });
     }
 
+    // Perform answer comparison and score calculation
     const answers = req.body.answers;
     let score = 0;
     let isCorrect = false;
@@ -256,6 +386,7 @@ const participateQuiz = async (req, res) => {
       };
     });
 
+    // Create records for user's answers, user participation, and user quiz score in the database
     await prisma.userQuestionAnswer.createMany({
       data: comparedAnswers,
     });
@@ -266,6 +397,7 @@ const participateQuiz = async (req, res) => {
       },
     });
 
+    // Retrieve the user's information
     const user = await prisma.user.findUnique({
       where: { id: Number(req.user.id) },
     });
@@ -278,10 +410,11 @@ const participateQuiz = async (req, res) => {
       },
     });
 
+    // Calculate the average score for the quiz
     const averageScore = await prisma.UserQuizScore.findMany({
       where: { quizId: record.id },
     });
-
+    //map through scores returning array of scores, then reduce to get total score, then divide by length of array to get average
     const average =
       averageScore.map((score) => score.score).reduce((a, b) => a + b, 0) /
       averageScore.length;
@@ -296,11 +429,15 @@ const participateQuiz = async (req, res) => {
   }
 };
 
+/**
+ * Delete a quiz.
+ */
 const deleteQuiz = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: Number(req.user.id) },
     });
+    // Check if the user has the required role to access this route
     if (user.role !== role) {
       return res.status(403).json({
         msg: 'Not authorized to access this route',
@@ -311,6 +448,7 @@ const deleteQuiz = async (req, res) => {
     const record = await prisma.quiz.findUnique({
       where: { id: Number(id) },
     });
+    // Check if the quiz record exists
     if (!record) {
       return res.status(404).json({
         msg: 'Quiz not found',
@@ -337,4 +475,5 @@ export {
   getFutureQuizzes,
   getPastQuizzes,
   getPresentQuizzes,
+  getDatedQuizzes,
 };
