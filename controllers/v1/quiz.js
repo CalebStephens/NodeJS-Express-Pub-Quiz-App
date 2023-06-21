@@ -69,18 +69,6 @@ const quizSchema = Joi.object({
 
 const role = 'SUPER_ADMIN_USER';
 
-/**
- * Create Quiz
- *
- * This function creates a new quiz with the provided data.
- * It performs validation on the request body using the quizSchema.
- * It checks if the user is authorized to create a quiz based on their role.
- * It validates the start and end dates of the quiz.
- * It makes an API request to fetch quiz questions from an external API.
- * It saves the quiz and its questions in the database using Prisma.
- * It returns a response with the success message if the quiz is created successfully.
- * If any error occurs during the process, it returns an error response with the error message.
- */
 const getDatedQuizzes = async (req, res) => {
   try {
     const records = await prisma.quiz.findMany({
@@ -95,7 +83,7 @@ const getDatedQuizzes = async (req, res) => {
           return new Date(record.startDate) > new Date();
         }),
       });
-    };
+    }
     if (req.params.date === 'past') {
       return await res.status(200).json({
         msg: 'No future quizzes',
@@ -108,16 +96,30 @@ const getDatedQuizzes = async (req, res) => {
       return await res.status(200).json({
         msg: 'No future quizzes',
         data: records.filter((record) => {
-          return (new Date(record.endDate) < new Date() &&
-          new Date(record.startDate) > new Date());
+          return (
+            new Date(record.endDate) < new Date() &&
+            new Date(record.startDate) > new Date()
+          );
         }),
       });
-    };
+    }
   } catch (err) {
     console.log(err);
   }
 };
 
+/**
+ * Create Quiz
+ *
+ * This function creates a new quiz with the provided data.
+ * It performs validation on the request body using the quizSchema.
+ * It checks if the user is authorized to create a quiz based on their role.
+ * It validates the start and end dates of the quiz.
+ * It makes an API request to fetch quiz questions from an external API.
+ * It saves the quiz and its questions in the database using Prisma.
+ * It returns a response with the success message if the quiz is created successfully.
+ * If any error occurs during the process, it returns an error response with the error message.
+ */
 const createQuiz = async (req, res) => {
   try {
     // Check user authorization based on role
@@ -211,115 +213,6 @@ const getAllQuizzes = async (req, res) => {
 };
 
 /**
- * Get Future Quizzes
- *
- * This function retrieves future quizzes from the database.
- * It fetches all quizzes along with their questions from the database using Prisma.
- * It filters the quizzes based on their start date, returning only the future quizzes.
- * If no future quizzes are found, it returns a response with a message indicating so.
- * If future quizzes are found, it returns a response with the list of future quizzes.
- * If any error occurs during the process, it returns an error response with the error message.
- */
-const getFutureQuizzes = async (req, res) => {
-  try {
-    // Retrieve all quizzes from the database along with their questions
-    const records = await prisma.quiz.findMany({
-      include: {
-        questions: true,
-      },
-    });
-
-    // Filter the quizzes to get only the future quizzes
-    const futureQuizzes = records.filter((record) => {
-      return new Date(record.startDate) > new Date();
-    });
-
-    if (!futureQuizzes.length) {
-      return res.status(200).json({ msg: 'No future quizzes' });
-    }
-
-    return res.status(200).json({ data: futureQuizzes });
-  } catch {
-    return res.status(500).json({
-      msg: err.message,
-    });
-  }
-};
-
-/**
- * Get Past Quizzes
- *
- * This function retrieves past quizzes from the database.
- * It fetches all quizzes along with their questions from the database using Prisma.
- * It filters the quizzes based on their end date, returning only the past quizzes.
- * If no past quizzes are found, it returns a response with a message indicating so.
- * If past quizzes are found, it returns a response with the list of past quizzes.
- * If any error occurs during the process, it returns an error response with the error message.
- */
-const getPastQuizzes = async (req, res) => {
-  try {
-    // Retrieve all quizzes from the database along with their questions
-    const records = await prisma.quiz.findMany({
-      include: {
-        questions: true,
-      },
-    });
-
-    // Filter the quizzes to get only the past quizzes
-    const pastQuizzes = records.filter((record) => {
-      return new Date(record.endDate) < new Date();
-    });
-    if (!pastQuizzes.length) {
-      return res.status(200).json({ msg: 'No past quizzes' });
-    }
-
-    return res.status(200).json({ data: pastQuizzes });
-  } catch {
-    return res.status(500).json({
-      msg: err.message,
-    });
-  }
-};
-
-/**
- * Get Present Quizzes
- *
- * This function retrieves present quizzes from the database.
- * It fetches all quizzes along with their questions from the database using Prisma.
- * It filters the quizzes based on their start and end dates, returning only the quizzes that are currently ongoing.
- * If no present quizzes are found, it returns a response with a message indicating so.
- * If present quizzes are found, it returns a response with the list of present quizzes.
- * If any error occurs during the process, it returns an error response with the error message.
- */
-const getPresentQuizzes = async (req, res) => {
-  try {
-    // Retrieve all quizzes from the database along with their questions
-    const records = await prisma.quiz.findMany({
-      include: {
-        questions: true,
-      },
-    });
-
-    // Filter the quizzes to get only the present quizzes
-    const presentQuizzes = records.filter((record) => {
-      return (
-        new Date(record.endDate) < new Date() &&
-        new Date(record.startDate) > new Date()
-      );
-    });
-    if (!presentQuizzes.length) {
-      return res.status(200).json({ msg: 'No present quizzes' });
-    }
-
-    return res.status(200).json({ data: presentQuizzes });
-  } catch {
-    return res.status(500).json({
-      msg: err.message,
-    });
-  }
-};
-
-/**
  * Participate in Quiz
  *
  * This function allows a user to participate in a quiz.
@@ -353,7 +246,7 @@ const participateQuiz = async (req, res) => {
         msg: 'Quiz has not started yet',
       });
     }
-     // Check if the quiz has finished
+    // Check if the quiz has finished
     if (new Date(record.endDate) <= new Date()) {
       return res.status(400).json({
         msg: 'Quiz has finished',
@@ -472,8 +365,5 @@ export {
   getAllQuizzes,
   participateQuiz,
   deleteQuiz,
-  getFutureQuizzes,
-  getPastQuizzes,
-  getPresentQuizzes,
   getDatedQuizzes,
 };
