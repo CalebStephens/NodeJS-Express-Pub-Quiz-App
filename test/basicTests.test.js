@@ -29,9 +29,25 @@ const quiz = {
         name: "firstQuiz",
         type: "multiple",
         numOfQuestions: 10,
-        startDate: "2023/06/21",
-        endDate: "2023/06/24"
+        startDate: "2023/06/24",
+        endDate: "2023/06/27"
 }
+
+const participate = {
+    "answers": [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+    ]
+}
+    
 
 
 
@@ -44,6 +60,7 @@ describe("Basic User register", () => {
             .end((err, res) => {
                 chai.expect(res.status).to.be.equal(201);
                 chai.expect(res.body).to.be.a("object");
+                chai.expect(res.body.msg).to.be.equal("bobby successfully registered")
                 done();
             })
     }
@@ -59,6 +76,7 @@ describe("Login Basic User register", () => {
             .end((err, res) => {
                 chai.expect(res.status).to.be.equal(200);
                 chai.expect(res.body).to.be.a("object");
+                chai.expect(res.body.msg).to.be.equal("bobby successfully logged in");
                 done();
             })
     }
@@ -101,3 +119,27 @@ describe("Create a quiz", () => {
     });
   });
   
+  describe("Participate in quiz", () => {
+    it("should create a quiz", (done) => {
+        chai
+        .request(app)
+        .post(`/${BASE_URL}/${CURRENT_VERSION}/auth/login`)
+        .send({
+          email: 'bossMan@gmail.com',
+          password: 'password!1'
+        })
+        .end((err, res) => {
+            chai
+            .request(app)
+            .post(`/${BASE_URL}/${CURRENT_VERSION}/quiz/1/participate`)
+            .set("Authorization", `Bearer ${res.body.token}`)
+            .send(participate)
+            .end((err, res) => {
+                console.log(res.body)
+                chai.expect(res.body).to.be.a("object");
+                chai.expect(res.body.data).to.be.equal("bossMan has successfully participated in quiz firstQuiz, your score was 0/10. Average score is 0");
+                done();
+            })
+        })
+    })
+});
