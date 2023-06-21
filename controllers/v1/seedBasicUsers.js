@@ -1,19 +1,23 @@
 /**
  * User Seeding Functions
  *
- * This file contains functions for seeding basic users into the database. It utilizes Prisma
- * for database operations and Axios for making HTTP requests to retrieve the user data to be seeded.
- * The functions include authorization checks to ensure that only super admin users can perform the seeding operation.
+ * This file contains functions for seeding basic users into the database.
+ *  It utilizes Prisma for database operations and Axios for making
+ *  HTTP requests to retrieve the user data to be seeded.
+ * The functions include authorization checks to ensure that
+ *  only super admin users can perform the seeding operation.
  *
  * Functions:
- * - seedBasicUsers: Seeds basic users into the database by retrieving user data from an external source
+ * - seedBasicUsers: Seeds basic users into the database by retrieving
+ *   user data from an external source
  *   and creating multiple user records using Prisma.
  *
  * Prisma Client instance and the seedBasicUsers function are exported for use in other files.
  */
 import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
 import axios from 'axios';
+
+const prisma = new PrismaClient();
 
 const role = ['SUPER_ADMIN_USER'];
 
@@ -27,7 +31,7 @@ const seedBasicUsers = async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: Number(id) } });
 
     // Check if the user is not a super admin
-    if (user.role != role) {
+    if (user.role !== role) {
       return res.status(403).json({
         msg: 'Not authorized to access this route',
       });

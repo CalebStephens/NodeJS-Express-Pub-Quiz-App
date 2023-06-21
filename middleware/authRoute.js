@@ -1,3 +1,10 @@
+/**
+ * Authentication middleware for validating bearer tokens in the authorization header.
+ * Intercepts incoming requests and verifies the authenticity of the provided token.
+ * If valid, sets the request's "user" property to the authenticated user's payload.
+ * If invalid, returns a response with a 403 forbidden status code.
+ */
+
 import jwt from 'jsonwebtoken';
 
 const authRoute = (req, res, next) => {

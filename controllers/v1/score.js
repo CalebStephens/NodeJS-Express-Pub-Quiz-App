@@ -10,6 +10,7 @@
  * Prisma Client instance and the getQuizScores function are exported for use in other files.
  */
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 /**
@@ -35,9 +36,7 @@ const getQuizScores = async (req, res) => {
 
     // If no scores are found for the specified quiz ID, return a response with a message
     if (!records) {
-      return res
-        .status(200)
-        .json({ msg: `No scores found for quiz with the id: ${id}` });
+      return res.status(200).json({ msg: `No scores found for quiz with the id: ${id}` });
     }
 
     return res.json({ data: records });

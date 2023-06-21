@@ -29,8 +29,7 @@ const CURRENT_VERSION = 'v1';
 const PORT = process.env.PORT;
 
 /**
- * When called generate a list of all available endpoints
- * @returns list of all available endpoint
+ * Function to get a list of all available endpoints in the application
  */
 const getAvailableEndpoints = () => {
   const endpoints = listEndpoints(app);
@@ -38,13 +37,13 @@ const getAvailableEndpoints = () => {
   const data = [];
 
   endpoints.forEach((endpoint) => {
-    if (endpoint.path.includes('/ ') || endpoint.path.includes(':id')) return;
-
     data.push(`${endpoint.path}`);
   });
 
   return data;
 };
+
+// Apply rate limiting middleware
 app.use(
   rateLimit({
     windowMs: 60 * 1000, // 1 minute duration in milliseconds
@@ -53,18 +52,28 @@ app.use(
     headers: true,
   })
 );
+// Parse url-encoded and JSON request bodies
 app.use(urlencoded({ extended: false }));
 app.use(json());
+
+// Enable Cross-Origin Resource Sharing
 app.use(cors());
+
+// Set secure HTTP headers
 app.use(helmet());
+
+// Custom middleware for caching
 app.use(cacheRoute);
+
+// Response compression
 app.use(compression());
 
+// Root endpoint that returns a list of available endpoints
 app.get(`/${BASE_URL}/${CURRENT_VERSION}/`, (req, res) =>
-  res.status(200)
-  .json(getAvailableEndpoints())
+  res.status(200).json(getAvailableEndpoints())
 );
 
+// Mounting routes with authentication middleware
 app.use(`/${BASE_URL}/${CURRENT_VERSION}/auth`, auth);
 app.use(`/${BASE_URL}/${CURRENT_VERSION}/users`, authRoute, users);
 app.use(`/${BASE_URL}/${CURRENT_VERSION}/seed`, authRoute, seed);

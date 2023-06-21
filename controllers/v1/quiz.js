@@ -16,9 +16,11 @@
  * Prisma Client instance and the above functions are exported for use in other files.
  */
 import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+
 import axios from 'axios';
 import Joi from 'joi';
+
+const prisma = new PrismaClient();
 
 const quizSchema = Joi.object({
   name: Joi.string()
@@ -96,13 +98,13 @@ const getDatedQuizzes = async (req, res) => {
       return await res.status(200).json({
         msg: 'No future quizzes',
         data: records.filter((record) => {
-          return (
-            new Date(record.endDate) < new Date() &&
-            new Date(record.startDate) > new Date()
-          );
+          return new Date(record.endDate) < new Date() && new Date(record.startDate) > new Date();
         }),
       });
     }
+    return res.status(400).json({
+      msg: 'Invalid date',
+    });
   } catch (err) {
     console.log(err);
   }
@@ -146,22 +148,22 @@ const createQuiz = async (req, res) => {
     const diffTime = Math.abs(endDate - startDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (startDate < todaysDate) {
-      return res.json({
-        msg: "Start date cannot be before today's date",
-      });
-    }
+    // if (startDate < todaysDate) {
+    //   return res.json({
+    //     msg: "Start date cannot be before today's date",
+    //   });
+    // }
 
-    if (startDate > endDate) {
-      return res.json({
-        msg: 'Start date cannot be greater than end date',
-      });
-    }
-    if (diffDays > 5) {
-      return res.json({
-        msg: 'Quiz duration cannot be longer than five days',
-      });
-    }
+    // if (startDate > endDate) {
+    //   return res.json({
+    //     msg: 'Start date cannot be greater than end date',
+    //   });
+    // }
+    // if (diffDays > 5) {
+    //   return res.json({
+    //     msg: 'Quiz duration cannot be longer than five days',
+    //   });
+    // }
 
     const baseURL = 'https://opentdb.com/api.php?';
     // Fetch quiz questions from an external API
@@ -217,20 +219,23 @@ const getAllQuizzes = async (req, res) => {
  *
  * This function allows a user to participate in a quiz.
  * It retrieves the quiz record from the database based on the provided ID.
- * It checks if the quiz has started and if it has finished, returning error responses if applicable.
- * It validates the number of answers provided by the user, ensuring it matches the number of questions in the quiz.
+ * It checks if the quiz has started and if it has finished,
+ *  returning error responses if applicable.
+ * It validates the number of answers provided by the user,
+ *  ensuring it matches the number of questions in the quiz.
  * It compares the user's answers with the correct answers and calculates the score.
- * It creates records for the user's answers, user participation in the quiz, and user quiz score in the database.
+ * It creates records for the user's answers, user participation in the quiz,
+ *  and user quiz score in the database.
  * It calculates the average score for the quiz.
- * Finally, it returns a response with the participation details, including the user's score and the average score.
- * If any error occurs during the process, it returns an error response with the error message.
+ * Finally, it returns a response with the participation details,
+ *  including the user's score and the average score.
+ * If any error occurs during the process, it returns an error
+ *  response with the error message.
  */
 const participateQuiz = async (req, res) => {
   try {
     // Retrieve the quiz ID from the request parameters
     const { id } = req.params;
-    console.log(req.params);
-    console.log('part');
     // Retrieve the quiz record from the database along with its questions
     const record = await prisma.quiz.findUnique({
       where: { id: Number(id) },
@@ -238,19 +243,18 @@ const participateQuiz = async (req, res) => {
         questions: true,
       },
     });
-    console.log(record.questions);
 
-    // Check if the quiz has started
-    if (new Date(record.startDate) >= new Date()) {
-      return res.status(400).json({
-        msg: 'Quiz has not started yet',
-      });
-    }
-    // Check if the quiz has finished
-    if (new Date(record.endDate) <= new Date()) {
-      return res.status(400).json({
-        msg: 'Quiz has finished',
-      });
+    const tDate = req.body.tDate;
+
+    const todaysDate = new Date(tDate).getTime();
+    const startDate = new Date(record.startDate).getTime();
+    const endDate = new Date(record.endDate).getTime();
+
+    //Check if the quiz has started and if it has finished
+    if (todaysDate < startDate) {
+      return res.status(200).json({ msg: 'Quiz has not started yet' });
+    } else if (todaysDate > endDate) {
+      return res.status(200).json({ msg: 'Quiz has ended' });
     }
 
     // Validate the number of answers provided by the user
@@ -265,7 +269,7 @@ const participateQuiz = async (req, res) => {
     let score = 0;
     let isCorrect = false;
     const comparedAnswers = answers.map((answer, index) => {
-      if (answer == record.questions[index].correctAnswer) {
+      if (answer === record.questions[index].correctAnswer) {
         score++;
         isCorrect = true;
       } else isCorrect = false;
@@ -307,10 +311,10 @@ const participateQuiz = async (req, res) => {
     const averageScore = await prisma.UserQuizScore.findMany({
       where: { quizId: record.id },
     });
-    //map through scores returning array of scores, then reduce to get total score, then divide by length of array to get average
+    //map through scores returning array of scores, then reduce to get total score,
+    // then divide by length of array to get average
     const average =
-      averageScore.map((score) => score.score).reduce((a, b) => a + b, 0) /
-      averageScore.length;
+      averageScore.map((score) => score.score).reduce((a, b) => a + b, 0) / averageScore.length;
 
     return res.status(200).json({
       data: `${user.username} has successfully participated in quiz ${record.name}, your score was ${score}/${record.questions.length}. Average score is ${average}`,
@@ -360,10 +364,4 @@ const deleteQuiz = async (req, res) => {
   }
 };
 
-export {
-  createQuiz,
-  getAllQuizzes,
-  participateQuiz,
-  deleteQuiz,
-  getDatedQuizzes,
-};
+export { createQuiz, getAllQuizzes, participateQuiz, deleteQuiz, getDatedQuizzes };

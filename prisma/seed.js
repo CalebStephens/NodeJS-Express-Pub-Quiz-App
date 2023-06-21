@@ -1,10 +1,9 @@
 import dotenv from 'dotenv';
+import bcryptjs from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
 import { superAdminUser } from '../data/superAdminUsers.js';
 
-import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
-
-import bcryptjs from 'bcryptjs';
 
 dotenv.config();
 
