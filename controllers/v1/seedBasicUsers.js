@@ -16,10 +16,11 @@
  */
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
+import bcryptjs from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-const role = ['SUPER_ADMIN_USER'];
+const role = 'SUPER_ADMIN_USER';
 
 /**
  * Seeds basic users into the database by retrieving user data from an external source
@@ -42,9 +43,15 @@ const seedBasicUsers = async (req, res) => {
       'https://gist.githubusercontent.com/CalebStephens/227847a99599ea21855d0488123b0cb1/raw/95dc2c022269515b9d7690feb025c922c9201ee2/basicUsers.json'
     );
 
+    data.data.forEach( (user) => {
+      const salt = bcryptjs.genSaltSync();
+      const hashedPassword = bcryptjs.hashSync(user.password, salt);
+      user.password = hashedPassword;
+    });
+
     // Create multiple user records in the database using Prisma
     await prisma.user.createMany({ data: data.data });
-    return res.status(201).json({ msg: 'Basic users successfully created' });
+    return res.status(201).json({ msg: 'Basic users successfully created', data: data.data });
   } catch (err) {
     return res.status(500).json({
       msg: err.message,
