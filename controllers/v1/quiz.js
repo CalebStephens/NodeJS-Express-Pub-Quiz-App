@@ -86,9 +86,10 @@ const getDatedQuizzes = async (req, res) => {
         return new Date(record.startDate) > new Date();
       });
 
-      if(!futureQuizzes.length) return await res.status(200).json({
-        msg: 'No future quizzes found',
-      });
+      if (!futureQuizzes.length)
+        return await res.status(200).json({
+          msg: 'No future quizzes found',
+        });
 
       return await res.status(200).json({
         data: futureQuizzes,
@@ -101,9 +102,10 @@ const getDatedQuizzes = async (req, res) => {
         return new Date(record.endDate) < new Date();
       });
 
-      if(!pastQuizzes.length) return await res.status(200).json({
-        msg: 'No past quizzes found',
-      });
+      if (!pastQuizzes.length)
+        return await res.status(200).json({
+          msg: 'No past quizzes found',
+        });
 
       return await res.status(200).json({
         data: futureQuizzes,
@@ -116,9 +118,10 @@ const getDatedQuizzes = async (req, res) => {
         return new Date(record.endDate) < new Date() && new Date(record.startDate) > new Date();
       });
 
-      if(!presentQuizzes.length) return await res.status(200).json({
-        msg: 'No present quizzes found',
-      });
+      if (!presentQuizzes.length)
+        return await res.status(200).json({
+          msg: 'No present quizzes found',
+        });
 
       return await res.status(200).json({
         data: presentQuizzes,
@@ -128,7 +131,9 @@ const getDatedQuizzes = async (req, res) => {
       msg: 'Invalid date, future, past, or present expected',
     });
   } catch (err) {
-    console.log(err);
+    return res.status(500).json({
+      msg: 'Internal server error',
+    });
   }
 };
 

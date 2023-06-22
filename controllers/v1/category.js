@@ -6,7 +6,6 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import axios from 'axios';
 import { categoryData } from '../../data/categories.js';
 const prisma = new PrismaClient();
 
@@ -40,15 +39,12 @@ const createCategories = async (req, res) => {
     // Delete existing categories
     await prisma.category.deleteMany();
 
-    // Fetch categories data from an external API
-    // const data = await axios.get('https://opentdb.com/api_category.php');
     // Create new categories using the fetched data
     await prisma.category.createMany({ data: categoryData });
     // Return a 201 Created response indicating successful creation of categories
     return res.status(201).json({
       msg: 'Categories successfully created',
-      data: 
-      categoryData,
+      data: categoryData,
     });
   } catch (err) {
     // If an error occurs, return a 500 Internal Server Error response with the error message

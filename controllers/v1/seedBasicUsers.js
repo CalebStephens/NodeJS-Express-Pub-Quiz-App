@@ -43,7 +43,7 @@ const seedBasicUsers = async (req, res) => {
       'https://gist.githubusercontent.com/CalebStephens/227847a99599ea21855d0488123b0cb1/raw/95dc2c022269515b9d7690feb025c922c9201ee2/basicUsers.json'
     );
 
-    data.data.forEach( (user) => {
+    data.data.forEach((user) => {
       const salt = bcryptjs.genSaltSync();
       const hashedPassword = bcryptjs.hashSync(user.password, salt);
       user.password = hashedPassword;

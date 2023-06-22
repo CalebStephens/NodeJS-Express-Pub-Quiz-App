@@ -12,7 +12,9 @@ Quiz related data is being pulled from the opentdb enpoints.
 5. You need to create an env with a `DATABASE_URL`, `PORT`, `JWT_SECRET`, `JWT_LIFETIME`.
 
 ## Scripts Available:
+
 Using `npm run`
+
 - `dev`: starts local deployment using nodemon.
 - `lint`: runs a linting check over your code.
 - `prettier`: formats your code to match rules set up in `.prettierrc.json`.

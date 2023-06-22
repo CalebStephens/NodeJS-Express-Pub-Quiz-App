@@ -34,7 +34,7 @@ const quiz = {
 };
 
 const participate = {
-    tDate: '2023/06/23',
+  tDate: '2023/06/23',
   answers: ['a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'],
 };
 
@@ -68,66 +68,65 @@ describe('Login Basic User register', () => {
   });
 });
 
-describe("Create a quiz", () => {
-    it("should create a quiz", (done) => {
-      chai
-        .request(app)
-        .post(`/${BASE_URL}/${CURRENT_VERSION}/auth/login`)
-        .send({
-          email: 'bossMan@gmail.com',
-          password: 'password!1'
-        })
-        .end((err, response) => {
-          chai
-            .request(app)
-            .post(`/${BASE_URL}/${CURRENT_VERSION}/category`)
-            .set("Authorization", `Bearer ${response.body.token}`)
-            .send()
-            .end((err, res) => {
-                chai.expect(res.status).to.be.equal(201);
-                chai.expect(res.body).to.be.a("object");
-            })
-            chai
-            .request(app)
-            .post(`/${BASE_URL}/${CURRENT_VERSION}/quiz`)
-            .set("Authorization", `Bearer ${response.body.token}`)
-            .send(quiz)
-            .end((err, res) => {
-                console.log(res)
-              chai.expect(res.status).to.be.equal(201);
-              chai.expect(res.body).to.be.a("object");
-              chai.expect(res.body.msg).to.be.equal("Quiz successfully created");
-              // Call done() inside the last end() callback
-              done();
-            });
-             
-        });
-    });
-  });
-  
-
-
-  describe("Participate in quiz", () => {
-    it("should create a quiz", (done) => {
+describe('Create a quiz', () => {
+  it('should create a quiz', (done) => {
+    chai
+      .request(app)
+      .post(`/${BASE_URL}/${CURRENT_VERSION}/auth/login`)
+      .send({
+        email: 'bossMan@gmail.com',
+        password: 'password!1',
+      })
+      .end((err, response) => {
         chai
-        .request(app)
-        .post(`/${BASE_URL}/${CURRENT_VERSION}/auth/login`)
-        .send({
-          email: 'bossMan@gmail.com',
-          password: 'password!1'
-        })
-        .end((err, res) => {
+          .request(app)
+          .post(`/${BASE_URL}/${CURRENT_VERSION}/category`)
+          .set('Authorization', `Bearer ${response.body.token}`)
+          .send()
+          .end((err, res) => {
+            chai.expect(res.status).to.be.equal(201);
+            chai.expect(res.body).to.be.a('object');
+          });
+        chai
+          .request(app)
+          .post(`/${BASE_URL}/${CURRENT_VERSION}/quiz`)
+          .set('Authorization', `Bearer ${response.body.token}`)
+          .send(quiz)
+          .end((err, res) => {
+            chai.expect(res.status).to.be.equal(201);
+            chai.expect(res.body).to.be.a('object');
+            chai.expect(res.body.msg).to.be.equal('Quiz successfully created');
+            // Call done() inside the last end() callback
+            done();
+          });
+      });
+  });
+});
+
+describe('Participate in quiz', () => {
+  it('should create a quiz', (done) => {
+    chai
+      .request(app)
+      .post(`/${BASE_URL}/${CURRENT_VERSION}/auth/login`)
+      .send({
+        email: 'bossMan@gmail.com',
+        password: 'password!1',
+      })
+      .end((err, res) => {
+        chai
+          .request(app)
+          .post(`/${BASE_URL}/${CURRENT_VERSION}/quiz/1/participate`)
+          .set('Authorization', `Bearer ${res.body.token}`)
+          .send(participate)
+          .end((err, res) => {
+            chai.expect(res.body).to.be.a('object');
             chai
-            .request(app)
-            .post(`/${BASE_URL}/${CURRENT_VERSION}/quiz/1/participate`)
-            .set("Authorization", `Bearer ${res.body.token}`)
-            .send(participate)
-            .end((err, res) => {
-                console.log(res.body)
-                chai.expect(res.body).to.be.a("object");
-                chai.expect(res.body.data).to.be.equal("bossMan has successfully participated in quiz firstQuiz, your score was 0/10. Average score is 0");
-                done();
-            })
-        })
-    })
+              .expect(res.body.data)
+              .to.be.equal(
+                'bossMan has successfully participated in quiz firstQuiz, your score was 0/10. Average score is 0'
+              );
+            done();
+          });
+      });
+  });
 });
