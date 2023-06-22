@@ -141,8 +141,7 @@ const register = async (req, res) => {
         username,
         email,
         password: hashedPassword,
-        avatar,
-        role: role ? role : 'BASIC_USER',
+        avatar
       },
     });
 

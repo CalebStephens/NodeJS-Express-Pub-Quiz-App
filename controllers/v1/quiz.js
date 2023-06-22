@@ -78,32 +78,54 @@ const getDatedQuizzes = async (req, res) => {
         questions: true,
       },
     });
+
+    // Check if the date parameter is set to 'future'
     if (req.params.date === 'future') {
+      // Filter quizzes to include only future quizzes
+      const futureQuizzes = records.filter((record) => {
+        return new Date(record.startDate) > new Date();
+      });
+
+      if(!futureQuizzes.length) return await res.status(200).json({
+        msg: 'No future quizzes found',
+      });
+
       return await res.status(200).json({
-        msg: 'No future quizzes',
-        data: records.filter((record) => {
-          return new Date(record.startDate) > new Date();
-        }),
+        data: futureQuizzes,
       });
     }
+    // Check if the date parameter is set to 'past'
     if (req.params.date === 'past') {
+      // Filter quizzes to include only past quizzes
+      const pastQuizzes = records.filter((record) => {
+        return new Date(record.endDate) < new Date();
+      });
+
+      if(!pastQuizzes.length) return await res.status(200).json({
+        msg: 'No past quizzes found',
+      });
+
       return await res.status(200).json({
-        msg: 'No future quizzes',
-        data: records.filter((record) => {
-          return new Date(record.endDate) < new Date();
-        }),
+        data: futureQuizzes,
       });
     }
+    // Check if the date parameter is set to 'present'
     if (req.params.date === 'present') {
+      // Filter quizzes to include only present quizzes
+      const presentQuizzes = records.filter((record) => {
+        return new Date(record.endDate) < new Date() && new Date(record.startDate) > new Date();
+      });
+
+      if(!presentQuizzes.length) return await res.status(200).json({
+        msg: 'No present quizzes found',
+      });
+
       return await res.status(200).json({
-        msg: 'No future quizzes',
-        data: records.filter((record) => {
-          return new Date(record.endDate) < new Date() && new Date(record.startDate) > new Date();
-        }),
+        data: presentQuizzes,
       });
     }
     return res.status(400).json({
-      msg: 'Invalid date',
+      msg: 'Invalid date, future, past, or present expected',
     });
   } catch (err) {
     console.log(err);
@@ -148,22 +170,22 @@ const createQuiz = async (req, res) => {
     const diffTime = Math.abs(endDate - startDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    // if (startDate < todaysDate) {
-    //   return res.json({
-    //     msg: "Start date cannot be before today's date",
-    //   });
-    // }
+    if (startDate < todaysDate) {
+      return res.json({
+        msg: "Start date cannot be before today's date",
+      });
+    }
 
-    // if (startDate > endDate) {
-    //   return res.json({
-    //     msg: 'Start date cannot be greater than end date',
-    //   });
-    // }
-    // if (diffDays > 5) {
-    //   return res.json({
-    //     msg: 'Quiz duration cannot be longer than five days',
-    //   });
-    // }
+    if (startDate > endDate) {
+      return res.json({
+        msg: 'Start date cannot be greater than end date',
+      });
+    }
+    if (diffDays > 5) {
+      return res.json({
+        msg: 'Quiz duration cannot be longer than five days',
+      });
+    }
 
     const baseURL = 'https://opentdb.com/api.php?';
     // Fetch quiz questions from an external API
